@@ -72,6 +72,8 @@ export const App: React.FC = () => {
             absent={stats.absent}
             reserveDays={reserveDays}
             targetPercent={targetPercent}
+            subjectSafeSum={stats.subjectSafeSum}
+            subjectLeftSum={stats.subjectLeftSum}
           />
           <QuickStatsCard
             stats={stats}
@@ -100,6 +102,7 @@ export const App: React.FC = () => {
           <CalendarView
             marks={marks}
             nowIST={nowIST}
+            stats={stats}
             onToggleMark={toggleMark}
             onSetDayMarks={setDayMarks}
           />
@@ -109,6 +112,9 @@ export const App: React.FC = () => {
           <SubjectExposure
             subjects={subjects}
             targetPercent={targetPercent}
+            overallLeft={stats.left}
+            subjectSafeSum={stats.subjectSafeSum}
+            subjectLeftSum={stats.subjectLeftSum}
           />
         )}
 

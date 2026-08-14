@@ -19,7 +19,9 @@ export type MarksMap = Record<string, Record<number, MarkStatus>>;
 export interface AttendanceStats {
   R: number; // Remaining lectures scheduled (excluding cancelled)
   H: number; // Total semester held once complete (BASE_HELD + R)
-  allowed: number; // Maximum bunks allowed to stay at or above target %
+  allowed: number; // Maximum bunks allowed to stay at or above target % (global pool)
+  subjectSafeSum: number; // Sum of individual subject safe allowances (e.g. 15)
+  subjectLeftSum: number; // Sum of remaining individual subject safe bunks
   cancelled: number; // Cancelled lectures marked
   absent: number; // Lectures bunked from TRACK_FROM onwards
   present: number; // Lectures attended from TRACK_FROM onwards
@@ -39,6 +41,7 @@ export interface LiveLectureStatus {
   progress: string; // e.g. "45%"
   meta: string; // e.g. "45 min to go" or "starts in 2 h 15 m"
   isLive: boolean;
+  isWeekend?: boolean;
 }
 
 export interface SubjectStat {
@@ -63,6 +66,7 @@ export interface WeekTrend {
   color: string;
   totalHeld: number;
   attended: number;
+  isBaseline?: boolean;
 }
 
 export type TabId = 'calendar' | 'subjects' | 'trend' | 'setup';

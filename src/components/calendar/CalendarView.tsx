@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import { MarksMap, MarkStatus } from '../../types/attendance';
+import { CaretLeft, CaretRight, LockSimple } from '@phosphor-icons/react';
+import { MarksMap, MarkStatus, AttendanceStats } from '../../types/attendance';
 import { THEME_COLORS } from '../../constants/config';
-import { HOLIDAYS } from '../../constants/calendar';
+import { HOLIDAYS, TRACK_FROM, TERM_START } from '../../constants/calendar';
 import { formatDateKey } from '../../utils/dateUtils';
 import { getDayKind, getLecturesOnDate, getMark } from '../../utils/attendanceMath';
 import { DayDetailSheet } from './DayDetailSheet';
@@ -10,6 +10,7 @@ import { DayDetailSheet } from './DayDetailSheet';
 interface CalendarViewProps {
   marks: MarksMap;
   nowIST: Date;
+  stats: AttendanceStats;
   onToggleMark: (dateKey: string, index: number, status: MarkStatus) => void;
   onSetDayMarks: (dateKey: string, status: MarkStatus | null) => void;
 }
@@ -17,6 +18,7 @@ interface CalendarViewProps {
 export const CalendarView: React.FC<CalendarViewProps> = ({
   marks,
   nowIST,
+  stats,
   onToggleMark,
   onSetDayMarks
 }) => {
@@ -52,6 +54,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     const dayMarks = marks[k] || {};
 
     const isToday = k === todayKey;
+    const isBaseline = k >= TERM_START && k < TRACK_FROM && kind === 'teaching';
     const anyAbsent = Object.values(dayMarks).some((v) => v === 'a');
     const allPresent = lectures.length > 0 && lectures.every((_, idx) => dayMarks[idx] === 'p');
 
@@ -71,6 +74,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     } else if (kind === 'pre' || kind === 'post') {
       bg = 'transparent';
       fg = 'var(--color-neutral-800)';
+    } else if (isBaseline) {
+      bg = 'rgba(145, 132, 217, 0.08)';
+      fg = 'var(--color-accent-200)';
+      border = '1px dashed rgba(145, 132, 217, 0.25)';
     }
 
     if (allPresent) {
@@ -83,13 +90,15 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       border = '1px solid var(--color-accent)';
     }
 
-    const dots = lectures.map((_, idx) => {
-      const m = getMark(marks, k, idx);
-      if (m === 'p') return THEME_COLORS.GREEN_BRIGHT;
-      if (m === 'a') return THEME_COLORS.RED;
-      if (m === 'c') return THEME_COLORS.AMBER;
-      return 'rgba(233, 233, 237, 0.22)';
-    });
+    const dots = isBaseline
+      ? lectures.map(() => 'var(--color-accent-400)')
+      : lectures.map((_, idx) => {
+          const m = getMark(marks, k, idx);
+          if (m === 'p') return THEME_COLORS.GREEN_BRIGHT;
+          if (m === 'a') return THEME_COLORS.RED;
+          if (m === 'c') return THEME_COLORS.AMBER;
+          return 'rgba(233, 233, 237, 0.22)';
+        });
 
     cells.push({
       isBlank: false,
@@ -99,7 +108,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       fg,
       border,
       dots,
-      kind
+      kind,
+      isBaseline
     });
   }
 
@@ -135,10 +145,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const monthPct = monthHeld > 0 ? (monthPresents / monthHeld) * 100 : 0;
 
   const legendItems = [
-    { color: THEME_COLORS.GREEN_BRIGHT, label: 'Present' },
-    { color: THEME_COLORS.RED, label: 'Bunked' },
+    { color: THEME_COLORS.GREEN_BRIGHT, label: 'Attended' },
+    { color: THEME_COLORS.RED, label: 'Missed' },
     { color: THEME_COLORS.AMBER, label: 'Cancelled / Holiday' },
-    { color: 'rgba(233, 233, 237, 0.22)', label: 'Unmarked' }
+    { color: 'var(--color-accent-400)', label: 'Baseline Period (Locked)' },
+    { color: 'rgba(233, 233, 237, 0.22)', label: 'Upcoming Unmarked' }
   ];
 
   return (
@@ -164,6 +175,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             className="btn btn-secondary btn-icon"
             style={{ width: '32px', height: '32px' }}
             title="Previous month"
+            aria-label="Previous month"
           >
             <CaretLeft size={15} />
           </button>
@@ -173,6 +185,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             className="btn btn-secondary btn-icon"
             style={{ width: '32px', height: '32px' }}
             title="Next month"
+            aria-label="Next month"
           >
             <CaretRight size={15} />
           </button>
@@ -207,7 +220,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 <div
                   key={cell.key}
                   style={{
-                    height: '42px',
+                    height: '44px',
                     background: 'transparent'
                   }}
                 />
@@ -219,7 +232,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 key={cell.key}
                 onClick={() => setActiveDateKey(cell.key)}
                 style={{
-                  height: '42px',
+                  height: '44px',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -240,7 +253,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 onMouseEnter={(e) => (e.currentTarget.style.filter = 'brightness(1.3)')}
                 onMouseLeave={(e) => (e.currentTarget.style.filter = 'brightness(1)')}
               >
-                <span>{cell.dayNumber}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                  <span>{cell.dayNumber}</span>
+                  {cell.isBaseline && <LockSimple size={9} color="var(--color-accent-400)" />}
+                </div>
                 <div style={{ display: 'flex', gap: '2px', height: '4px', alignItems: 'center' }}>
                   {cell.dots?.map((dotColor, dIdx) => (
                     <span
@@ -288,16 +304,45 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         background: 'rgba(233, 233, 237, 0.02)',
         border: '1px solid rgba(233, 233, 237, 0.04)'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <h4 style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>
-            {monthName} Snapshot
-          </h4>
-          <span style={{ fontSize: '11px', color: 'var(--color-neutral-500)' }}>
-            {monthTeachingDays} teaching days
+        {/* Semester Overall Reference */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '10px 12px',
+          borderRadius: 'var(--radius-sm)',
+          background: 'rgba(145, 132, 217, 0.08)',
+          border: '1px solid rgba(145, 132, 217, 0.18)'
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--color-accent-300)', fontWeight: 600 }}>
+              Overall Semester Status
+            </span>
+            <span style={{ fontSize: '12px', color: 'var(--color-neutral-300)' }}>
+              {stats.attNow} of {stats.heldNow} attended (includes baseline)
+            </span>
+          </div>
+          <span style={{
+            fontFamily: 'var(--font-heading)',
+            fontSize: '20px',
+            fontWeight: 600,
+            color: 'var(--color-accent-200)',
+            fontVariantNumeric: 'tabular-nums'
+          }}>
+            {stats.currentPct.toFixed(1)}%
           </span>
         </div>
 
-        {/* Mini stats cards */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: '4px' }}>
+          <h4 style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>
+            {monthName} In-App Marks
+          </h4>
+          <span style={{ fontSize: '11px', color: 'var(--color-neutral-500)' }}>
+            {monthTeachingDays} teaching days scheduled
+          </span>
+        </div>
+
+        {/* Mini stats cards for the selected month */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
           <div style={{
             padding: '10px',
@@ -318,8 +363,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             }}>
               {monthPresents}
             </span>
-            <span style={{ fontSize: '11px', color: 'var(--color-neutral-600)' }}>
-              of {monthHeld} marked
+            <span style={{ fontSize: '11px', color: 'var(--color-neutral-500)' }}>
+              of {monthHeld} marked in app
             </span>
           </div>
 
@@ -342,8 +387,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             }}>
               {monthHeld > 0 ? `${monthPct.toFixed(1)}%` : '—'}
             </span>
-            <span style={{ fontSize: '11px', color: 'var(--color-neutral-600)' }}>
-              {monthAbsents} bunks taken
+            <span style={{ fontSize: '11px', color: 'var(--color-neutral-500)' }}>
+              {monthAbsents} missed in {monthName.slice(0, 3)}
             </span>
           </div>
         </div>
@@ -379,7 +424,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           fontSize: '11px',
           color: 'var(--color-accent-300)'
         }}>
-          💡 Click any date on the calendar to mark Present, Bunked, or Cancelled for that day.
+          💡 Click any date on the calendar to log attendance or view daily schedule details.
         </div>
       </div>
 

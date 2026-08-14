@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Check, Minus } from '@phosphor-icons/react';
+import { X, Check, Prohibit, LockSimple } from '@phosphor-icons/react';
 import { MarksMap, MarkStatus } from '../../types/attendance';
 import { THEME_COLORS } from '../../constants/config';
 import { TRACK_FROM, HOLIDAYS } from '../../constants/calendar';
@@ -32,52 +32,54 @@ export const DayDetailSheet: React.FC<DayDetailSheetProps> = ({
   const dateLabel = date.toLocaleDateString('en-GB', {
     weekday: 'long',
     day: 'numeric',
-    month: 'long'
+    month: 'long',
+    year: 'numeric'
   });
 
   const kindLabel = kind === 'teaching'
     ? isEditable
-      ? `${lectures.length} lecture${lectures.length > 1 ? 's' : ''}`
-      : 'Baseline period'
+      ? `${lectures.length} lecture${lectures.length > 1 ? 's' : ''} scheduled`
+      : 'Historical Baseline Period'
     : kind === 'diwali'
     ? 'Diwali break'
     : kind === 'midterm'
     ? 'Mid-term window'
     : kind === 'holiday'
-    ? 'Holiday'
+    ? 'Official Holiday'
     : kind === 'weekend'
     ? 'Weekend'
     : 'Outside term';
 
   const kindColor = kind === 'teaching'
-    ? 'var(--color-accent)'
+    ? isEditable ? 'var(--color-accent)' : 'var(--color-neutral-400)'
     : kind === 'holiday' || kind === 'diwali'
     ? THEME_COLORS.AMBER
     : 'var(--color-neutral-500)';
 
   const reason = kind === 'holiday'
-    ? `${HOLIDAYS[dateKey]} (Official Holiday)`
+    ? `${HOLIDAYS[dateKey]} — Official University Holiday.`
     : kind === 'diwali'
-    ? 'Diwali break.'
+    ? 'Diwali break — no classes scheduled.'
     : kind === 'midterm'
     ? 'Mid-term exam window.'
     : kind === 'weekend'
-    ? 'Weekend.'
+    ? 'Weekend Safe Zone.'
     : !isEditable
-    ? 'Records prior to 17 Aug are locked.'
-    : 'Nothing scheduled.';
+    ? 'Pre-loaded Historical Baseline (27 attended of 33 held across July 20 – Aug 14). Daily in-app marks activate from 17 Aug.'
+    : 'No classes scheduled on this day.';
 
   const getButtonStyle = (isActive: boolean, activeColor: string) => {
     return isActive
       ? {
           border: `1px solid ${activeColor}`,
           background: `color-mix(in srgb, ${activeColor} 22%, transparent)`,
-          color: activeColor
+          color: activeColor,
+          boxShadow: `0 0 8px color-mix(in srgb, ${activeColor} 40%, transparent)`
         }
       : {
           border: '1px solid var(--color-divider)',
-          background: 'transparent',
-          color: 'var(--color-neutral-600)'
+          background: 'rgba(233, 233, 237, 0.02)',
+          color: 'var(--color-neutral-400)'
         };
   };
 
@@ -101,7 +103,7 @@ export const DayDetailSheet: React.FC<DayDetailSheetProps> = ({
         onClick={(e) => e.stopPropagation()}
         className="animate-slide-up"
         style={{
-          width: 'min(540px, 100%)',
+          width: 'min(560px, 100%)',
           maxHeight: '86vh',
           overflowY: 'auto',
           display: 'flex',
@@ -118,12 +120,16 @@ export const DayDetailSheet: React.FC<DayDetailSheetProps> = ({
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flex: 1 }}>
             <span style={{
-              fontSize: '10px',
+              fontSize: '11px',
               letterSpacing: '.14em',
               textTransform: 'uppercase',
               color: kindColor,
-              fontWeight: 600
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px'
             }}>
+              {!isEditable && kind === 'teaching' && <LockSimple size={13} />}
               {kindLabel}
             </span>
             <span style={{ fontFamily: 'var(--font-heading)', fontSize: '22px', fontWeight: 600 }}>
@@ -135,6 +141,7 @@ export const DayDetailSheet: React.FC<DayDetailSheetProps> = ({
             onClick={onClose}
             className="btn btn-secondary btn-icon"
             style={{ width: '32px', height: '32px' }}
+            aria-label="Close"
           >
             <X size={16} />
           </button>
@@ -171,56 +178,68 @@ export const DayDetailSheet: React.FC<DayDetailSheetProps> = ({
                       </span>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '4px', flex: 'none' }}>
+                    <div style={{ display: 'flex', gap: '6px', flex: 'none', alignItems: 'center' }}>
                       <button
                         onClick={() => onToggleMark(dateKey, idx, 'p')}
-                        title="Present"
+                        title="Mark Present (Attended)"
+                        aria-label="Mark Present"
                         style={{
-                          width: '34px',
-                          height: '34px',
-                          display: 'grid',
-                          placeItems: 'center',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '6px 9px',
                           borderRadius: '8px',
                           cursor: 'pointer',
-                          fontSize: '15px',
+                          fontSize: '12px',
+                          fontWeight: 500,
+                          transition: 'all 0.15s ease',
                           ...pStyle
                         }}
                       >
-                        <Check weight="bold" />
+                        <Check weight="bold" size={14} />
+                        <span>Attended</span>
                       </button>
 
                       <button
                         onClick={() => onToggleMark(dateKey, idx, 'a')}
-                        title="Bunked"
+                        title="Mark Absent (Missed)"
+                        aria-label="Mark Absent"
                         style={{
-                          width: '34px',
-                          height: '34px',
-                          display: 'grid',
-                          placeItems: 'center',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '6px 9px',
                           borderRadius: '8px',
                           cursor: 'pointer',
-                          fontSize: '15px',
+                          fontSize: '12px',
+                          fontWeight: 500,
+                          transition: 'all 0.15s ease',
                           ...aStyle
                         }}
                       >
-                        <X weight="bold" />
+                        <X weight="bold" size={14} />
+                        <span>Missed</span>
                       </button>
 
                       <button
                         onClick={() => onToggleMark(dateKey, idx, 'c')}
-                        title="Class cancelled"
+                        title="Mark Cancelled / No Class"
+                        aria-label="Mark Cancelled"
                         style={{
-                          width: '34px',
-                          height: '34px',
-                          display: 'grid',
-                          placeItems: 'center',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '6px 8px',
                           borderRadius: '8px',
                           cursor: 'pointer',
-                          fontSize: '15px',
+                          fontSize: '12px',
+                          fontWeight: 500,
+                          transition: 'all 0.15s ease',
                           ...cStyle
                         }}
                       >
-                        <Minus weight="bold" />
+                        <Prohibit weight="bold" size={14} />
+                        <span>Off</span>
                       </button>
                     </div>
                   </div>
@@ -241,7 +260,7 @@ export const DayDetailSheet: React.FC<DayDetailSheetProps> = ({
                 fontSize: '11px',
                 letterSpacing: '.12em',
                 textTransform: 'uppercase',
-                color: 'var(--color-neutral-600)',
+                color: 'var(--color-neutral-500)',
                 fontWeight: 600,
                 marginBottom: '2px'
               }}>
@@ -252,28 +271,38 @@ export const DayDetailSheet: React.FC<DayDetailSheetProps> = ({
                 className="btn btn-primary"
                 style={{ fontSize: '13px' }}
               >
-                All present
+                Mark All Attended
               </button>
               <button
                 onClick={() => onSetDayMarks(dateKey, 'a')}
                 className="btn btn-secondary"
                 style={{ fontSize: '13px' }}
               >
-                Bunked the day ({lectures.length} {lectures.length === 1 ? 'lecture' : 'lectures'})
+                Missed Full Day ({lectures.length} {lectures.length === 1 ? 'lecture' : 'lectures'})
               </button>
               <button
                 onClick={() => onSetDayMarks(dateKey, null)}
                 className="btn btn-ghost"
                 style={{ fontSize: '13px' }}
               >
-                Clear
+                Reset Day
               </button>
             </div>
           </>
         ) : (
-          <p style={{ margin: 0, fontSize: '14px', color: 'var(--color-neutral-400)', textWrap: 'pretty' }}>
-            {reason}
-          </p>
+          <div style={{
+            padding: '16px',
+            borderRadius: 'var(--radius-md)',
+            background: 'rgba(233, 233, 237, 0.03)',
+            border: '1px solid rgba(233, 233, 237, 0.05)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px'
+          }}>
+            <p style={{ margin: 0, fontSize: '14px', color: 'var(--color-neutral-300)', lineHeight: 1.5 }}>
+              {reason}
+            </p>
+          </div>
         )}
       </div>
     </div>

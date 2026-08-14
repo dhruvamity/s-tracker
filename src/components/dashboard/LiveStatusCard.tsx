@@ -13,7 +13,9 @@ export const LiveStatusCard: React.FC<LiveStatusCardProps> = ({ live }) => {
       gap: '12px',
       padding: '18px',
       borderRadius: 'var(--radius-lg)',
-      background: 'linear-gradient(150deg, #2a2745, #20222f 60%)',
+      background: live.isWeekend
+        ? 'linear-gradient(150deg, #242238, #1c1d28 60%)'
+        : 'linear-gradient(150deg, #2a2745, #20222f 60%)',
       boxShadow: 'var(--shadow-md)',
       minWidth: 0,
       border: '1px solid rgba(233, 233, 237, 0.07)'
@@ -32,7 +34,7 @@ export const LiveStatusCard: React.FC<LiveStatusCardProps> = ({ live }) => {
           fontSize: '10px',
           letterSpacing: '.14em',
           textTransform: 'uppercase',
-          color: 'var(--color-accent-300)',
+          color: live.isWeekend ? 'var(--color-accent-200)' : 'var(--color-accent-300)',
           fontWeight: 600
         }}>
           {live.kicker}
@@ -42,14 +44,14 @@ export const LiveStatusCard: React.FC<LiveStatusCardProps> = ({ live }) => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
         <span style={{
           fontFamily: 'var(--font-heading)',
-          fontSize: 'clamp(20px, 3.4vw, 27px)',
-          lineHeight: 1.1,
+          fontSize: 'clamp(20px, 3.4vw, 26px)',
+          lineHeight: 1.15,
           fontWeight: 'var(--font-heading-weight)'
         }}>
           {live.subject}
         </span>
         <span style={{
-          fontSize: '14px',
+          fontSize: '13px',
           color: 'var(--color-neutral-400)',
           fontVariantNumeric: 'tabular-nums'
         }}>
@@ -67,12 +69,12 @@ export const LiveStatusCard: React.FC<LiveStatusCardProps> = ({ live }) => {
           <div style={{
             height: '100%',
             borderRadius: '999px',
-            background: 'var(--color-accent)',
+            background: live.isWeekend ? 'var(--color-accent-600)' : 'var(--color-accent)',
             width: live.progress,
             transition: 'width 0.5s ease'
           }} />
         </div>
-        <span style={{ fontSize: '12px', color: 'var(--color-neutral-500)' }}>
+        <span style={{ fontSize: '12px', color: 'var(--color-neutral-400)' }}>
           {live.meta}
         </span>
       </div>

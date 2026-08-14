@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, X, Minus } from '@phosphor-icons/react';
+import { Check, X, Prohibit } from '@phosphor-icons/react';
 import { MarksMap, MarkStatus, TabId } from '../../types/attendance';
 import { THEME_COLORS } from '../../constants/config';
 import { TRACK_FROM, HOLIDAYS } from '../../constants/calendar';
@@ -41,29 +41,32 @@ export const TodayLectures: React.FC<TodayLecturesProps> = ({
     } else {
       dayNote = 'Weekend';
     }
+  } else {
+    dayNote = 'Historical baseline period';
   }
 
   const emptyLabel = kind === 'weekend'
-    ? 'No classes today.'
+    ? 'No classes scheduled today (Weekend Safe Zone).'
     : kind === 'diwali'
-    ? 'Diwali break.'
+    ? 'Diwali break — no classes scheduled.'
     : kind === 'midterm'
     ? 'Mid-term exam window.'
     : kind === 'holiday'
-    ? `${HOLIDAYS[todayKey] || 'Holiday'}.`
-    : 'Nothing scheduled.';
+    ? `${HOLIDAYS[todayKey] || 'Holiday'} — no lectures scheduled.`
+    : 'No classes scheduled today.';
 
   const getButtonStyle = (isActive: boolean, activeColor: string) => {
     return isActive
       ? {
           border: `1px solid ${activeColor}`,
           background: `color-mix(in srgb, ${activeColor} 22%, transparent)`,
-          color: activeColor
+          color: activeColor,
+          boxShadow: `0 0 8px color-mix(in srgb, ${activeColor} 40%, transparent)`
         }
       : {
           border: '1px solid var(--color-divider)',
-          background: 'transparent',
-          color: 'var(--color-neutral-600)'
+          background: 'rgba(233, 233, 237, 0.02)',
+          color: 'var(--color-neutral-400)'
         };
   };
 
@@ -91,7 +94,7 @@ export const TodayLectures: React.FC<TodayLecturesProps> = ({
       {lectures.length > 0 ? (
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
           gap: '10px'
         }}>
           {lectures.map((lec, idx) => {
@@ -162,62 +165,71 @@ export const TodayLectures: React.FC<TodayLecturesProps> = ({
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', gap: '4px', flex: 'none' }}>
+                <div style={{ display: 'flex', gap: '6px', flex: 'none', alignItems: 'center' }}>
                   <button
                     onClick={() => isEditable && onToggleMark(todayKey, idx, 'p')}
                     disabled={!isEditable}
-                    title="Mark Present"
+                    title="Mark Present (Attended)"
+                    aria-label="Mark Present"
                     style={{
-                      width: '34px',
-                      height: '34px',
-                      display: 'grid',
-                      placeItems: 'center',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '6px 9px',
                       borderRadius: '8px',
                       cursor: isEditable ? 'pointer' : 'not-allowed',
-                      fontSize: '15px',
+                      fontSize: '12px',
+                      fontWeight: 500,
                       transition: 'all 0.15s ease',
                       ...pStyle
                     }}
                   >
-                    <Check weight="bold" />
+                    <Check weight="bold" size={14} />
+                    <span>Attended</span>
                   </button>
 
                   <button
                     onClick={() => isEditable && onToggleMark(todayKey, idx, 'a')}
                     disabled={!isEditable}
                     title="Mark Bunked / Absent"
+                    aria-label="Mark Absent"
                     style={{
-                      width: '34px',
-                      height: '34px',
-                      display: 'grid',
-                      placeItems: 'center',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '6px 9px',
                       borderRadius: '8px',
                       cursor: isEditable ? 'pointer' : 'not-allowed',
-                      fontSize: '15px',
+                      fontSize: '12px',
+                      fontWeight: 500,
                       transition: 'all 0.15s ease',
                       ...aStyle
                     }}
                   >
-                    <X weight="bold" />
+                    <X weight="bold" size={14} />
+                    <span>Missed</span>
                   </button>
 
                   <button
                     onClick={() => isEditable && onToggleMark(todayKey, idx, 'c')}
                     disabled={!isEditable}
-                    title="Mark Class Cancelled"
+                    title="Mark Cancelled / No Class"
+                    aria-label="Mark Cancelled"
                     style={{
-                      width: '34px',
-                      height: '34px',
-                      display: 'grid',
-                      placeItems: 'center',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '6px 8px',
                       borderRadius: '8px',
                       cursor: isEditable ? 'pointer' : 'not-allowed',
-                      fontSize: '15px',
+                      fontSize: '12px',
+                      fontWeight: 500,
                       transition: 'all 0.15s ease',
                       ...cStyle
                     }}
                   >
-                    <Minus weight="bold" />
+                    <Prohibit weight="bold" size={14} />
+                    <span>Off</span>
                   </button>
                 </div>
               </div>

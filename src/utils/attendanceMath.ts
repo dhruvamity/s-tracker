@@ -44,6 +44,58 @@ export function getMark(marks: MarksMap, dateKey: string, index: number) {
   return marks[dateKey]?.[index] || null;
 }
 
+export function calculateSubjectExposure(
+  marks: MarksMap,
+  targetPercent: number
+): SubjectStat[] {
+  const schedule = generateSemesterSchedule();
+  const summary: Record<string, { total: number; absent: number; days: Record<string, boolean> }> = {};
+
+  schedule.forEach((lec) => {
+    const m = getMark(marks, lec.k, lec.i);
+    if (!summary[lec.s]) {
+      summary[lec.s] = { total: 0, absent: 0, days: {} };
+    }
+    if (m !== 'c') summary[lec.s].total++;
+    if (m === 'a') summary[lec.s].absent++;
+
+    const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][parseDateKey(lec.k).getDay()];
+    summary[lec.s].days[dayName] = true;
+  });
+
+  return Object.keys(summary)
+    .sort((a, b) => summary[b].total - summary[a].total)
+    .map((name) => {
+      const s = summary[name];
+      const safeAllowance = Math.max(0, Math.floor(s.total * (1 - targetPercent / 100)));
+      const left = Math.max(0, safeAllowance - s.absent);
+
+      let color = THEME_COLORS.GREEN_BRIGHT;
+      if (left === 0) color = THEME_COLORS.RED;
+      else if (left <= 1) color = THEME_COLORS.AMBER;
+
+      const shadow = left === 0
+        ? `0 0 0 1px color-mix(in srgb, ${THEME_COLORS.RED} 45%, transparent)`
+        : 'var(--shadow-sm)';
+
+      const barPct = `${Math.round((safeAllowance ? left / safeAllowance : 0) * 100)}%`;
+      const note = `${s.total} remaining · ${s.absent} missed · Max ${safeAllowance} skippable`;
+
+      return {
+        name,
+        days: Object.keys(s.days).join(' · '),
+        left,
+        total: s.total,
+        absent: s.absent,
+        safeAllowance,
+        color,
+        shadow,
+        barPct,
+        note
+      };
+    });
+}
+
 export function calculateAttendanceStats(
   marks: MarksMap,
   targetPercent: number,
@@ -83,10 +135,16 @@ export function calculateAttendanceStats(
   const projected = H > 0 ? ((BASE_ATT + R - absent) / H) * 100 : 0;
   const left = allowed - absent;
 
+  const subjects = calculateSubjectExposure(marks, targetPercent);
+  const subjectSafeSum = subjects.reduce((sum, s) => sum + s.safeAllowance, 0);
+  const subjectLeftSum = subjects.reduce((sum, s) => sum + s.left, 0);
+
   return {
     R,
     H,
     allowed,
+    subjectSafeSum,
+    subjectLeftSum,
     cancelled,
     absent,
     present,
@@ -99,62 +157,58 @@ export function calculateAttendanceStats(
   };
 }
 
-export function calculateSubjectExposure(
-  marks: MarksMap,
-  targetPercent: number
-): SubjectStat[] {
-  const schedule = generateSemesterSchedule();
-  const summary: Record<string, { total: number; absent: number; days: Record<string, boolean> }> = {};
-
-  schedule.forEach((lec) => {
-    const m = getMark(marks, lec.k, lec.i);
-    if (!summary[lec.s]) {
-      summary[lec.s] = { total: 0, absent: 0, days: {} };
-    }
-    if (m !== 'c') summary[lec.s].total++;
-    if (m === 'a') summary[lec.s].absent++;
-
-    const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][parseDateKey(lec.k).getDay()];
-    summary[lec.s].days[dayName] = true;
-  });
-
-  return Object.keys(summary)
-    .sort((a, b) => summary[b].total - summary[a].total)
-    .map((name) => {
-      const s = summary[name];
-      const safeAllowance = Math.max(0, Math.floor(s.total * (1 - targetPercent / 100)));
-      const left = Math.max(0, safeAllowance - s.absent);
-
-      let color = THEME_COLORS.GREEN_BRIGHT;
-      if (left === 0) color = THEME_COLORS.RED;
-      else if (left <= 1) color = THEME_COLORS.AMBER;
-
-      const shadow = left === 0
-        ? `0 0 0 1px color-mix(in srgb, ${THEME_COLORS.RED} 45%, transparent)`
-        : 'var(--shadow-sm)';
-
-      const barPct = `${Math.round((safeAllowance ? left / safeAllowance : 0) * 100)}%`;
-      const note = `${s.total} sessions left · ${s.absent} bunked · ${safeAllowance} is the safe allowance`;
-
-      return {
-        name,
-        days: Object.keys(s.days).join(' · '),
-        left,
-        total: s.total,
-        absent: s.absent,
-        safeAllowance,
-        color,
-        shadow,
-        barPct,
-        note
-      };
-    });
-}
-
 export function calculateWeeklyTrends(
   marks: MarksMap,
   targetPercent: number
 ): WeekTrend[] {
+  // Pre-loaded baseline weeks (July 20 to August 14) representing the 27/33 historical baseline
+  const baselineWeeks: WeekTrend[] = [
+    {
+      weekKey: '2026-07-20',
+      label: '20 Jul',
+      pct: 85.7,
+      pctLabel: '86%',
+      heightPx: Math.max(6, Math.round(85.7 * 1.3)),
+      color: THEME_COLORS.GREEN_BRIGHT,
+      totalHeld: 7,
+      attended: 6,
+      isBaseline: true
+    },
+    {
+      weekKey: '2026-07-27',
+      label: '27 Jul',
+      pct: 85.7,
+      pctLabel: '86%',
+      heightPx: Math.max(6, Math.round(85.7 * 1.3)),
+      color: THEME_COLORS.GREEN_BRIGHT,
+      totalHeld: 7,
+      attended: 6,
+      isBaseline: true
+    },
+    {
+      weekKey: '2026-08-03',
+      label: '3 Aug',
+      pct: 75.0,
+      pctLabel: '75%',
+      heightPx: Math.max(6, Math.round(75.0 * 1.3)),
+      color: THEME_COLORS.GREEN_BRIGHT,
+      totalHeld: 8,
+      attended: 6,
+      isBaseline: true
+    },
+    {
+      weekKey: '2026-08-10',
+      label: '10 Aug',
+      pct: 81.8,
+      pctLabel: '82%',
+      heightPx: Math.max(6, Math.round(81.8 * 1.3)),
+      color: THEME_COLORS.GREEN_BRIGHT,
+      totalHeld: 11,
+      attended: 9,
+      isBaseline: true
+    }
+  ];
+
   const schedule = generateSemesterSchedule();
   const byWeek: Record<string, { p: number; h: number; mondayDate: Date }> = {};
 
@@ -174,9 +228,7 @@ export function calculateWeeklyTrends(
     if (m === 'p') byWeek[weekKey].p++;
   });
 
-  const weekKeys = Object.keys(byWeek).sort().slice(-8);
-
-  return weekKeys.map((wk) => {
+  const recordedWeeks: WeekTrend[] = Object.keys(byWeek).sort().map((wk) => {
     const w = byWeek[wk];
     const pct = (w.p / w.h) * 100;
     const heightPx = Math.max(6, Math.round(pct * 1.3));
@@ -196,15 +248,22 @@ export function calculateWeeklyTrends(
       heightPx,
       color,
       totalHeld: w.h,
-      attended: w.p
+      attended: w.p,
+      isBaseline: false
     };
   });
+
+  // Combine baseline weeks with recorded active weeks
+  const allWeeks = [...baselineWeeks, ...recordedWeeks];
+  return allWeeks.slice(-8); // Show up to the latest 8 weeks
 }
 
 export function getLiveLectureStatus(nowIST: Date): LiveLectureStatus {
   const currentMinutes = nowIST.getHours() * 60 + nowIST.getMinutes();
   const todayKey = formatDateKey(nowIST);
   const todayLectures = getLecturesOnDate(todayKey);
+  const dayOfWeek = nowIST.getDay(); // 0 = Sun, 6 = Sat, 5 = Fri
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
   // 1. Check if currently in class
   for (const lec of todayLectures) {
@@ -225,7 +284,8 @@ export function getLiveLectureStatus(nowIST: Date): LiveLectureStatus {
         timeRange: formatTimeRange(lec.t, lec.e),
         progress,
         meta,
-        isLive: true
+        isLive: true,
+        isWeekend: false
       };
     }
   }
@@ -240,6 +300,22 @@ export function getLiveLectureStatus(nowIST: Date): LiveLectureStatus {
       const sMin = timeToMinutes(lec.t);
       if (offset > 0 || sMin > currentMinutes) {
         const diffMinutes = offset * 1440 + sMin - currentMinutes;
+
+        // If today is weekend (Sat/Sun) or Friday after classes (> 18h to next class)
+        if (isWeekend || diffMinutes > 1440) {
+          const targetDayName = checkDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+          return {
+            kicker: `🌴 Weekend · Next class ${targetDayName}`,
+            dot: 'var(--color-accent-400)',
+            subject: lec.s,
+            timeRange: `${checkDate.toLocaleDateString('en-GB', { weekday: 'long' })} · ${formatTimeRange(lec.t, lec.e)}`,
+            progress: '0%',
+            meta: `Weekend Safe Zone · Classes resume ${checkDate.toLocaleDateString('en-GB', { weekday: 'long' })} at ${lec.t}`,
+            isLive: false,
+            isWeekend: true
+          };
+        }
+
         const when = offset === 0
           ? 'Today'
           : offset === 1
@@ -248,20 +324,19 @@ export function getLiveLectureStatus(nowIST: Date): LiveLectureStatus {
 
         const h = Math.floor(diffMinutes / 60);
         const mm = diffMinutes % 60;
-        const meta = diffMinutes >= 1440
-          ? `starts in ${Math.floor(diffMinutes / 1440)} d ${h % 24} h`
-          : h > 0
+        const meta = h > 0
           ? `starts in ${h} h ${mm} m`
           : `starts in ${mm} min`;
 
         return {
           kicker: `Up next · ${when}`,
-          dot: 'var(--color-accent-600)',
+          dot: 'var(--color-accent-400)',
           subject: lec.s,
           timeRange: formatTimeRange(lec.t, lec.e),
           progress: '0%',
           meta,
-          isLive: false
+          isLive: false,
+          isWeekend: false
         };
       }
     }
@@ -273,7 +348,8 @@ export function getLiveLectureStatus(nowIST: Date): LiveLectureStatus {
     subject: 'No lectures left',
     timeRange: '1 Dec 2026 was the last teaching day',
     progress: '100%',
-    meta: '',
-    isLive: false
+    meta: 'Semester finished',
+    isLive: false,
+    isWeekend: false
   };
 }

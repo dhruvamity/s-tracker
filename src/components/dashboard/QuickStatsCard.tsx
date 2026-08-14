@@ -70,11 +70,11 @@ export const QuickStatsCard: React.FC<QuickStatsCardProps> = ({ stats, targetPer
         {stats.projected.toFixed(2)}%
       </span>
 
-      <span style={{ fontSize: '12px', color: 'var(--color-neutral-500)' }}>
-        {stats.attNow} / {stats.heldNow} held
+      <span style={{ fontSize: '12px', color: 'var(--color-neutral-400)', fontWeight: 500 }}>
+        {stats.attNow} / {stats.heldNow} attended
       </span>
       <span style={{ fontSize: '12px', color: 'var(--color-neutral-500)' }}>
-        if you attend the rest
+        if all future classes attended
       </span>
 
       <div style={{
@@ -96,7 +96,7 @@ export const QuickStatsCard: React.FC<QuickStatsCardProps> = ({ stats, targetPer
           {daysLeft}
         </span>
         <span style={{ fontSize: '12px', color: 'var(--color-neutral-500)' }}>
-          days to 1 Dec, the last teaching day
+          days until 1 Dec (teaching ends)
         </span>
       </div>
     </div>

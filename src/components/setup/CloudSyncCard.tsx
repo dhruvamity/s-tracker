@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { CloudCheck, CaretDown, CaretUp } from '@phosphor-icons/react';
 import { FirebaseSyncState } from '../../types/attendance';
 import { THEME_COLORS } from '../../constants/config';
 
@@ -14,9 +15,11 @@ interface CloudSyncCardProps {
 }
 
 export const CloudSyncCard: React.FC<CloudSyncCardProps> = ({ firebase }) => {
-  const [localText, setLocalText] = useState<string>(firebase.text);
+  const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
+  const [customConfig, setCustomConfig] = useState<string>(firebase.text);
 
-  const dotColor = firebase.status === 'live'
+  const isConnected = firebase.status === 'live';
+  const dotColor = isConnected
     ? THEME_COLORS.GREEN_BRIGHT
     : firebase.status === 'error'
     ? THEME_COLORS.RED
@@ -24,77 +27,146 @@ export const CloudSyncCard: React.FC<CloudSyncCardProps> = ({ firebase }) => {
     ? THEME_COLORS.AMBER
     : 'var(--color-neutral-600)';
 
-  const statusLabel = firebase.message || (
-    firebase.status === 'live' ? 'Synced' : 'Saving on this device only'
-  );
+  const statusLabel = isConnected
+    ? 'Cloud Sync Active (Real-time sync enabled)'
+    : firebase.status === 'connecting'
+    ? 'Connecting to Cloud…'
+    : firebase.status === 'error'
+    ? (firebase.message || 'Sync error')
+    : 'Local Storage Mode (Saved on this device)';
 
   return (
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      gap: '12px',
+      gap: '14px',
       padding: 'clamp(14px, 2vw, 22px)',
       borderRadius: 'var(--radius-lg)',
       background: 'var(--color-surface)',
       boxShadow: 'var(--shadow-sm)',
       border: '1px solid rgba(233, 233, 237, 0.05)'
     }}>
-      <h3 style={{ fontSize: '20px', fontWeight: 600, margin: 0 }}>
-        Cloud sync
-      </h3>
-      <p style={{ margin: 0, fontSize: '13px', color: 'var(--color-neutral-400)', textWrap: 'pretty' }}>
-        Everything is saved on this device already in localStorage. Paste a Firebase web config to sync to Firestore, and your marks follow you to your phone or tablet in real time.
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <CloudCheck size={22} color="var(--color-accent)" />
+          <h3 style={{ fontSize: '20px', fontWeight: 600, margin: 0 }}>
+            Device &amp; Cloud Sync
+          </h3>
+        </div>
+      </div>
+
+      <p style={{ margin: 0, fontSize: '13px', color: 'var(--color-neutral-400)', lineHeight: 1.5 }}>
+        All your attendance marks and preferences are automatically saved on this device. When cloud sync is connected, your marks follow you seamlessly across your phone, tablet, and laptop.
       </p>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
-        <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: dotColor }} />
-        <span style={{ color: 'var(--color-neutral-300)', fontWeight: 500 }}>
+      {/* Friendly Status Indicator */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        padding: '12px 14px',
+        borderRadius: 'var(--radius-md)',
+        background: isConnected ? 'rgba(145, 132, 217, 0.08)' : 'rgba(233, 233, 237, 0.03)',
+        border: '1px solid ' + (isConnected ? 'rgba(145, 132, 217, 0.2)' : 'rgba(233, 233, 237, 0.05)')
+      }}>
+        <span style={{
+          width: '9px',
+          height: '9px',
+          borderRadius: '50%',
+          background: dotColor,
+          boxShadow: isConnected ? `0 0 8px ${dotColor}` : 'none'
+        }} />
+        <span style={{
+          fontSize: '13px',
+          color: isConnected ? 'var(--color-accent-100)' : 'var(--color-neutral-300)',
+          fontWeight: 500
+        }}>
           {statusLabel}
         </span>
       </div>
 
-      <div className="field">
-        <label htmlFor="fbcfg">Firebase config (JSON)</label>
-        <textarea
-          id="fbcfg"
-          className="input"
-          spellCheck={false}
-          placeholder='{ "apiKey": "…", "authDomain": "…", "projectId": "…", "appId": "…" }'
-          value={localText}
-          onChange={(e) => {
-            setLocalText(e.target.value);
-            firebase.setText(e.target.value);
-          }}
+      {/* Advanced Developer Settings Collapsible */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        paddingTop: '6px'
+      }}>
+        <button
+          onClick={() => setShowAdvanced((prev) => !prev)}
+          className="btn btn-ghost"
           style={{
-            minHeight: '118px',
-            fontFamily: 'ui-monospace, monospace',
+            alignSelf: 'flex-start',
             fontSize: '12px',
-            lineHeight: 1.4
+            color: 'var(--color-neutral-500)',
+            padding: '2px 6px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px'
           }}
-        />
-      </div>
-
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-        <button
-          onClick={() => firebase.connect(localText)}
-          className="btn btn-primary"
         >
-          Connect &amp; sync
+          {showAdvanced ? <CaretUp size={12} /> : <CaretDown size={12} />}
+          <span>{showAdvanced ? 'Hide Advanced Cloud Settings' : 'Advanced Cloud Settings (Custom Server)'}</span>
         </button>
-        <button
-          onClick={() => {
-            firebase.disconnect();
-            setLocalText('');
-          }}
-          className="btn btn-secondary"
-        >
-          Disconnect
-        </button>
-      </div>
 
-      <p style={{ margin: 0, fontSize: '11px', color: 'var(--color-neutral-600)', textWrap: 'pretty' }}>
-        Requires Anonymous sign-in enabled and a Firestore security rule allowing signed-in users to read/write under <span style={{ fontFamily: 'ui-monospace, monospace' }}>attendance/{'{uid}'}</span>.
-      </p>
+        {showAdvanced && (
+          <div className="animate-fade-in" style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px',
+            padding: '12px',
+            borderRadius: 'var(--radius-md)',
+            background: 'rgba(0, 0, 0, 0.2)',
+            border: '1px solid var(--color-divider)',
+            marginTop: '4px'
+          }}>
+            <div className="field">
+              <label htmlFor="fbcfg" style={{ fontSize: '11px', color: 'var(--color-neutral-500)' }}>
+                Custom Firebase Web Configuration (JSON)
+              </label>
+              <textarea
+                id="fbcfg"
+                className="input"
+                spellCheck={false}
+                placeholder='{ "apiKey": "…", "authDomain": "…", "projectId": "…" }'
+                value={customConfig}
+                onChange={(e) => {
+                  setCustomConfig(e.target.value);
+                  firebase.setText(e.target.value);
+                }}
+                style={{
+                  minHeight: '80px',
+                  fontFamily: 'ui-monospace, monospace',
+                  fontSize: '11px',
+                  lineHeight: 1.4
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => firebase.connect(customConfig)}
+                className="btn btn-primary"
+                style={{ fontSize: '12px', padding: '6px 12px' }}
+              >
+                Apply Custom Config
+              </button>
+              {isConnected && (
+                <button
+                  onClick={() => {
+                    firebase.disconnect();
+                    setCustomConfig('');
+                  }}
+                  className="btn btn-secondary"
+                  style={{ fontSize: '12px', padding: '6px 12px' }}
+                >
+                  Disconnect
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

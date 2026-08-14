@@ -16,13 +16,13 @@ export const CalculationFacts: React.FC<CalculationFactsProps> = ({
   const mustAttend = Math.max(0, Math.ceil((stats.H * targetPercent) / 100 - BASE_ATT));
 
   const facts = [
-    { k: 'Frozen baseline to 14 Aug', v: `${BASE_ATT} / ${BASE_HELD}` },
-    { k: 'Lectures scheduled 17 Aug – 1 Dec', v: String(stats.R) },
-    { k: 'Semester total once held', v: String(stats.H) },
-    { k: 'Must attend from here', v: `${mustAttend} of ${stats.R}` },
-    { k: `Bunk budget at ${targetPercent}%`, v: String(stats.allowed) },
-    { k: 'Slots removed by holidays and Diwali', v: '22' },
-    { k: 'Classes cancelled by you', v: String(stats.cancelled) }
+    { k: 'Past Attendance (up to 14 Aug)', v: `${BASE_ATT} / ${BASE_HELD}` },
+    { k: 'Upcoming lectures (17 Aug – 1 Dec)', v: String(stats.R) },
+    { k: 'Projected semester total lectures', v: String(stats.H) },
+    { k: 'Minimum attendance needed from here', v: `${mustAttend} of ${stats.R}` },
+    { k: `Total bunk budget (at ${targetPercent}% overall)`, v: `${stats.allowed} total (${stats.subjectSafeSum} course-constrained)` },
+    { k: 'Off days (Holidays & Mid-term breaks)', v: '22 slots' },
+    { k: 'Lectures marked as Cancelled / Off', v: String(stats.cancelled) }
   ];
 
   return (
@@ -52,14 +52,15 @@ export const CalculationFacts: React.FC<CalculationFactsProps> = ({
               fontSize: '13px'
             }}
           >
-            <span style={{ color: 'var(--color-neutral-500)', flex: 1, textWrap: 'pretty' }}>
+            <span style={{ color: 'var(--color-neutral-400)', flex: 1, textWrap: 'pretty' }}>
               {fact.k}
             </span>
             <span style={{
               fontFamily: 'var(--font-heading)',
               fontVariantNumeric: 'tabular-nums',
               whiteSpace: 'nowrap',
-              fontWeight: 500
+              fontWeight: 500,
+              color: 'var(--color-text)'
             }}>
               {fact.v}
             </span>
@@ -69,14 +70,14 @@ export const CalculationFacts: React.FC<CalculationFactsProps> = ({
 
       <button
         onClick={() => {
-          if (window.confirm('Clear every attendance mark you have recorded?')) {
+          if (window.confirm('Reset all logged in-app marks? (Your pre-loaded historical baseline remains safe)')) {
             onClearAll();
           }
         }}
         className="btn btn-secondary"
         style={{ alignSelf: 'flex-start', marginTop: '6px', fontSize: '13px' }}
       >
-        Clear every mark
+        Reset In-App Marks
       </button>
     </div>
   );

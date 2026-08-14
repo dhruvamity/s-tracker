@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { WeekTrend } from '../../types/attendance';
+import { THEME_COLORS } from '../../constants/config';
+import { Info } from '@phosphor-icons/react';
 
 interface WeeklyTrendChartProps {
   trends: WeekTrend[];
@@ -7,6 +9,7 @@ interface WeeklyTrendChartProps {
 }
 
 export const WeeklyTrendChart: React.FC<WeeklyTrendChartProps> = ({ trends, targetPercent }) => {
+  const [hoveredWeek, setHoveredWeek] = useState<WeekTrend | null>(null);
   const lineBottom = `${Math.round(targetPercent * 1.3) + 26}px`;
 
   return (
@@ -20,100 +23,149 @@ export const WeeklyTrendChart: React.FC<WeeklyTrendChartProps> = ({ trends, targ
       boxShadow: 'var(--shadow-sm)',
       border: '1px solid rgba(233, 233, 237, 0.05)'
     }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '10px' }}>
-        <h3 style={{ fontSize: '20px', fontWeight: 600, margin: 0 }}>
-          Weekly trend
-        </h3>
-        <span style={{ fontSize: '12px', color: 'var(--color-neutral-500)' }}>
-          Attendance per teaching week, against the {targetPercent}% target line.
-        </span>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '10px', justifyContent: 'space-between' }}>
+        <div>
+          <h3 style={{ fontSize: '20px', fontWeight: 600, margin: 0 }}>
+            Weekly Attendance Trend
+          </h3>
+          <span style={{ fontSize: '12px', color: 'var(--color-neutral-400)' }}>
+            Attendance percentage per teaching week against the {targetPercent}% target requirement.
+          </span>
+        </div>
+
+        {hoveredWeek && (
+          <div style={{
+            fontSize: '12px',
+            color: 'var(--color-accent-200)',
+            background: 'rgba(145, 132, 217, 0.12)',
+            padding: '4px 10px',
+            borderRadius: '6px',
+            border: '1px solid rgba(145, 132, 217, 0.2)'
+          }}>
+            Week of {hoveredWeek.label}: <strong>{hoveredWeek.attended} / {hoveredWeek.totalHeld} attended ({hoveredWeek.pctLabel})</strong>
+            {hoveredWeek.isBaseline && ' · Historical Baseline'}
+          </div>
+        )}
       </div>
 
-      {trends.length > 0 ? (
-        <div style={{
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'flex-end',
-          gap: 'clamp(6px, 1.6vw, 16px)',
-          height: '200px',
-          padding: '20px 0 0'
-        }}>
-          {/* Target guideline */}
+      <div style={{
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'flex-end',
+        gap: 'clamp(8px, 2vw, 20px)',
+        height: '210px',
+        padding: '24px 0 10px',
+        borderBottom: '1px solid var(--color-divider)'
+      }}>
+        {/* Target guideline */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: lineBottom,
+            height: '1px',
+            background: 'linear-gradient(to right, transparent, var(--color-accent-700) 24px, var(--color-accent-700) calc(100% - 24px), transparent)',
+            borderTop: '1px dashed var(--color-accent-500)',
+            zIndex: 1
+          }}
+        >
+          <span style={{
+            position: 'absolute',
+            right: '8px',
+            bottom: '4px',
+            fontSize: '10px',
+            color: 'var(--color-accent-300)',
+            fontWeight: 600,
+            background: 'var(--color-surface)',
+            padding: '0 4px',
+            borderRadius: '3px'
+          }}>
+            {targetPercent}% Target Line
+          </span>
+        </div>
+
+        {trends.map((w) => (
           <div
+            key={w.weekKey}
+            onMouseEnter={() => setHoveredWeek(w)}
+            onMouseLeave={() => setHoveredWeek(null)}
             style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              bottom: lineBottom,
-              height: '1px',
-              background: 'linear-gradient(to right, transparent, var(--color-accent-700) 24px, var(--color-accent-700) calc(100% - 24px), transparent)',
-              zIndex: 1
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '6px',
+              minWidth: 0,
+              height: '100%',
+              justifyContent: 'flex-end',
+              zIndex: 2,
+              cursor: 'pointer'
             }}
           >
             <span style={{
-              position: 'absolute',
-              right: '8px',
-              bottom: '4px',
-              fontSize: '10px',
-              color: 'var(--color-accent-400)',
-              fontWeight: 500
+              fontSize: '11px',
+              fontVariantNumeric: 'tabular-nums',
+              color: w.pct >= targetPercent ? 'var(--color-text)' : THEME_COLORS.AMBER,
+              fontWeight: 600
             }}>
-              {targetPercent}% Target
+              {w.pctLabel}
             </span>
-          </div>
 
-          {trends.map((w) => (
             <div
-              key={w.weekKey}
+              title={`${w.attended} of ${w.totalHeld} attended (${w.pctLabel})${w.isBaseline ? ' · Baseline' : ''}`}
               style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '7px',
-                minWidth: 0,
-                height: '100%',
-                justifyContent: 'flex-end',
-                zIndex: 2
+                width: '100%',
+                maxWidth: '54px',
+                borderRadius: '6px 6px 2px 2px',
+                background: w.isBaseline
+                  ? 'linear-gradient(to top, #4c4672, #7a70b0)'
+                  : w.color,
+                height: `${w.heightPx}px`,
+                transition: 'all 0.3s ease',
+                border: w.isBaseline ? '1px solid rgba(145, 132, 217, 0.3)' : 'none',
+                opacity: hoveredWeek && hoveredWeek.weekKey !== w.weekKey ? 0.6 : 1
               }}
-            >
+            />
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
               <span style={{
                 fontSize: '11px',
-                fontVariantNumeric: 'tabular-nums',
                 color: 'var(--color-neutral-400)',
+                whiteSpace: 'nowrap',
                 fontWeight: 500
-              }}>
-                {w.pctLabel}
-              </span>
-
-              <div
-                title={`${w.attended} of ${w.totalHeld} attended (${w.pctLabel})`}
-                style={{
-                  width: '100%',
-                  maxWidth: '54px',
-                  borderRadius: '6px 6px 2px 2px',
-                  background: w.color,
-                  height: `${w.heightPx}px`,
-                  transition: 'height 0.4s ease, background 0.2s ease',
-                  cursor: 'pointer'
-                }}
-              />
-
-              <span style={{
-                fontSize: '10px',
-                color: 'var(--color-neutral-600)',
-                whiteSpace: 'nowrap'
               }}>
                 {w.label}
               </span>
+              {w.isBaseline && (
+                <span style={{
+                  fontSize: '8px',
+                  letterSpacing: '.06em',
+                  textTransform: 'uppercase',
+                  color: 'var(--color-neutral-500)',
+                  fontWeight: 600
+                }}>
+                  Past
+                </span>
+              )}
             </div>
-          ))}
-        </div>
-      ) : (
-        <p style={{ margin: 0, fontSize: '14px', color: 'var(--color-neutral-400)' }}>
-          Mark a few lectures and your week-by-week trend appears here.
-        </p>
-      )}
+          </div>
+        ))}
+      </div>
+
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        fontSize: '11px',
+        color: 'var(--color-neutral-500)',
+        paddingTop: '2px'
+      }}>
+        <Info size={14} color="var(--color-accent)" style={{ flex: 'none' }} />
+        <span>
+          Weeks marked "Past" represent historical pre-loaded baseline data (27 attended of 33 held across July 20 – Aug 14).
+        </span>
+      </div>
     </section>
   );
 };
