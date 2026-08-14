@@ -24,7 +24,8 @@ export const App: React.FC = () => {
     subjects,
     trends,
     toggleMark,
-    setDayMarks
+    setDayMarks,
+    firebase
   } = useAttendance(nowIST);
 
   return (
@@ -41,6 +42,7 @@ export const App: React.FC = () => {
           greeting={greeting}
           istClock={istClockFormatted}
           istDate={istDateFormatted}
+          syncStatus={firebase.status}
         />
 
         {/* Overview Metric Cards */}

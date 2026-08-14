@@ -54,12 +54,19 @@ class FirebaseService implements FirebaseSyncService {
         ? appModule.getApps()[0]
         : appModule.initializeApp(configObj);
 
-      const auth = authModule.getAuth(app);
-      const cred = await authModule.signInAnonymously(auth);
       const db = firestoreModule.getFirestore(app);
 
+      // Attempt anonymous auth if available, but don't fail if anonymous auth is not required by rules
+      try {
+        const auth = authModule.getAuth(app);
+        await authModule.signInAnonymously(auth);
+      } catch (authErr) {
+        console.warn('Anonymous auth note (proceeding to Firestore):', authErr);
+      }
+
       this.fsModule = firestoreModule;
-      this.docRef = firestoreModule.doc(db, 'attendance', cred.user.uid);
+      // All devices for Saanvi connect to the same shared attendance document
+      this.docRef = firestoreModule.doc(db, 'attendance', 'saanvi_sem5');
 
       if (this.unsubscribe) {
         this.unsubscribe();
@@ -68,32 +75,28 @@ class FirebaseService implements FirebaseSyncService {
       this.unsubscribe = firestoreModule.onSnapshot(
         this.docRef,
         (snap: any) => {
-          const data = snap.data();
-          if (data && typeof data.updatedAt === 'number') {
-            onRemoteUpdate(data.marks || {}, data.updatedAt);
+          if (!snap.exists || snap.exists()) {
+            const data = snap.data();
+            if (data && typeof data.updatedAt === 'number') {
+              onRemoteUpdate(data.marks || {}, data.updatedAt);
+            }
           }
         },
         (error: any) => {
-          onStatusChange('error', 'Firestore permission denied. Check your security rules.');
-          console.error(error);
+          onStatusChange('error', 'Firestore sync permission issue. Verify security rules in Firebase Console.');
+          console.error('Firestore listener error:', error);
         }
       );
 
-      onStatusChange('live', `Synced to Firestore · ${cred.user.uid.slice(0, 6)}`);
+      onStatusChange('live', 'Live Cloud Sync Active');
       return true;
     } catch (err: any) {
       const code = err?.code || '';
       const msg = String(err?.message || err);
       let userFriendlyMsg = msg;
 
-      if (code === 'auth/configuration-not-found' || msg.includes('CONFIGURATION_NOT_FOUND')) {
-        userFriendlyMsg = 'Auth not initialized: Enable "Anonymous" sign-in under Firebase Console > Authentication > Sign-in method.';
-      } else if (code === 'auth/operation-not-allowed' || msg.includes('admin-restricted-operation')) {
-        userFriendlyMsg = 'Anonymous auth disabled: Enable "Anonymous" provider in Firebase Console > Authentication.';
-      } else if (msg.includes('not-found') || msg.includes('404')) {
-        userFriendlyMsg = 'Firestore not created: Click "Create Database" in Firebase Console > Firestore Database.';
-      } else if (code === 'permission-denied' || msg.includes('permission-denied')) {
-        userFriendlyMsg = 'Firestore permission denied: Update Firestore Security Rules to allow access.';
+      if (code === 'permission-denied' || msg.includes('permission-denied')) {
+        userFriendlyMsg = 'Firestore permission denied: Update Firestore Security Rules to allow read/write on attendance collection.';
       }
 
       onStatusChange('error', userFriendlyMsg);

@@ -28,12 +28,12 @@ export function useAttendance(nowIST: Date) {
       const raw = localStorage.getItem(STORAGE_KEYS.MARKS);
       if (raw) {
         const parsed = JSON.parse(raw);
-        return parsed.updatedAt || Date.now();
+        return typeof parsed.updatedAt === 'number' ? parsed.updatedAt : 0;
       }
     } catch {
       // fallback
     }
-    return Date.now();
+    return 0;
   });
 
   const [targetPercent, setTargetPercent] = useState<number>(() => {
@@ -91,7 +91,7 @@ export function useAttendance(nowIST: Date) {
       firebaseService.connect(
         configToUse,
         (remoteMarks, remoteUpdatedAt) => {
-          if (remoteUpdatedAt > updatedAt) {
+          if (remoteMarks && typeof remoteMarks === 'object') {
             setMarks(remoteMarks);
             setUpdatedAt(remoteUpdatedAt);
             try {

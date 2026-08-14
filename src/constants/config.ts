@@ -20,14 +20,14 @@ export const THEME_COLORS = {
   DIVIDER: 'var(--color-divider)'
 };
 
-export const ENV_FIREBASE_CONFIG = import.meta.env.VITE_FIREBASE_API_KEY
-  ? JSON.stringify({
-      apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-      appId: import.meta.env.VITE_FIREBASE_APP_ID
-    }, null, 2)
-  : '';
+export const DEFAULT_FIREBASE_CONFIG = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDdsmJQDDIE-r7XdkDiQ1EzZO1-KCiAPrA",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "sdtracker-bf448.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "sdtracker-bf448",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "sdtracker-bf448.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "745258135763",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:745258135763:web:434a00592b8254172ba426"
+};
+
+export const ENV_FIREBASE_CONFIG = JSON.stringify(DEFAULT_FIREBASE_CONFIG, null, 2);
 
