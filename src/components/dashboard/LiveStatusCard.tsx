@@ -59,25 +59,31 @@ export const LiveStatusCard: React.FC<LiveStatusCardProps> = ({ live }) => {
         </span>
       </div>
 
-      <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '7px' }}>
-        <div style={{
-          height: '4px',
-          borderRadius: '999px',
-          background: 'rgba(233, 233, 237, 0.09)',
-          overflow: 'hidden'
-        }}>
-          <div style={{
-            height: '100%',
-            borderRadius: '999px',
-            background: live.isWeekend ? 'var(--color-accent-600)' : 'var(--color-accent)',
-            width: live.progress,
-            transition: 'width 0.5s ease'
-          }} />
+      {(live.isLive || live.meta) && (
+        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '7px' }}>
+          {live.isLive && (
+            <div style={{
+              height: '4px',
+              borderRadius: '999px',
+              background: 'rgba(233, 233, 237, 0.09)',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                height: '100%',
+                borderRadius: '999px',
+                background: live.isWeekend ? 'var(--color-accent-600)' : 'var(--color-accent)',
+                width: live.progress,
+                transition: 'width 0.5s ease'
+              }} />
+            </div>
+          )}
+          {live.meta && (
+            <span style={{ fontSize: '12px', color: 'var(--color-neutral-400)' }}>
+              {live.meta}
+            </span>
+          )}
         </div>
-        <span style={{ fontSize: '12px', color: 'var(--color-neutral-400)' }}>
-          {live.meta}
-        </span>
-      </div>
+      )}
     </div>
   );
 };

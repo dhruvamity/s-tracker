@@ -43,7 +43,7 @@ export const App: React.FC = () => {
       background: 'radial-gradient(120% 80% at 88% -10%, #22203c 0%, #161826 55%)',
       color: 'var(--color-text)',
       fontFamily: 'var(--font-body)',
-      padding: 'clamp(14px, 3vw, 34px) clamp(12px, 3vw, 34px) 64px'
+      padding: 'clamp(14px, 3vw, 34px) clamp(12px, 3vw, 34px) calc(84px + env(safe-area-inset-bottom))'
     }}>
       <div style={{
         maxWidth: '1180px',
@@ -69,11 +69,7 @@ export const App: React.FC = () => {
           <BunkBudgetRing
             left={stats.left}
             allowed={stats.allowed}
-            absent={stats.absent}
             reserveDays={reserveDays}
-            targetPercent={targetPercent}
-            subjectSafeSum={stats.subjectSafeSum}
-            subjectLeftSum={stats.subjectLeftSum}
           />
           <QuickStatsCard
             stats={stats}
@@ -91,18 +87,12 @@ export const App: React.FC = () => {
           onNavigateTab={setActiveTab}
         />
 
-        {/* Tab Navigation */}
-        <TabNavigation
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
 
         {/* Active Tab View */}
         {activeTab === 'calendar' && (
           <CalendarView
             marks={marks}
             nowIST={nowIST}
-            stats={stats}
             onToggleMark={toggleMark}
             onSetDayMarks={setDayMarks}
           />
@@ -150,6 +140,12 @@ export const App: React.FC = () => {
           </section>
         )}
       </div>
+
+      {/* Fixed Bottom Navigation */}
+      <TabNavigation
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
     </div>
   );
 };

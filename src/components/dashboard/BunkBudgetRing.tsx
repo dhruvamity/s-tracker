@@ -1,24 +1,16 @@
 import React from 'react';
 import { THEME_COLORS } from '../../constants/config';
-import { Info } from '@phosphor-icons/react';
 
 interface BunkBudgetRingProps {
   left: number;
   allowed: number;
-  absent: number;
   reserveDays: number;
-  targetPercent: number;
-  subjectSafeSum?: number;
-  subjectLeftSum?: number;
 }
 
 export const BunkBudgetRing: React.FC<BunkBudgetRingProps> = ({
   left,
   allowed,
-  absent,
-  reserveDays,
-  targetPercent,
-  subjectLeftSum = 15
+  reserveDays
 }) => {
   const safeLeft = Math.max(0, left);
   const color = left <= 0
@@ -30,10 +22,6 @@ export const BunkBudgetRing: React.FC<BunkBudgetRingProps> = ({
   const fraction = allowed > 0 ? Math.max(0, Math.min(1, safeLeft / allowed)) : 0;
   const circumference = 326.7;
   const strokeDashoffset = circumference - circumference * fraction;
-
-  const note = left <= 0
-    ? `Budget exhausted — every further absence drops overall attendance under ${targetPercent}%.`
-    : `Reserve ~${reserveDays} bunks for emergencies. Tue & Wed: 2 slots/day; other days have 1 slot.`;
 
   return (
     <div style={{
@@ -108,43 +96,21 @@ export const BunkBudgetRing: React.FC<BunkBudgetRingProps> = ({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{
-              fontSize: '10px',
-              letterSpacing: '.14em',
-              textTransform: 'uppercase',
-              color: 'var(--color-accent)',
-              fontWeight: 600
-            }}>
-              Overall Bunk Budget
-            </span>
-          </div>
-          <span style={{ fontSize: '14px', color: 'var(--color-neutral-200)', fontWeight: 500 }}>
-            {absent} of {allowed} spent
+          <span style={{ fontSize: '16px', color: 'var(--color-neutral-200)', fontWeight: 600 }}>
+            {safeLeft}
           </span>
-          <span style={{ fontSize: '12px', color: 'var(--color-neutral-500)', textWrap: 'pretty' }}>
-            {note}
+          <span style={{
+            fontSize: '11px',
+            letterSpacing: '.08em',
+            textTransform: 'uppercase',
+            color: 'var(--color-neutral-500)',
+            fontWeight: 500
+          }}>
+            Total Bunks Left
           </span>
         </div>
       </div>
 
-      {/* Per-subject constraint helper note */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        padding: '6px 10px',
-        borderRadius: 'var(--radius-sm)',
-        background: 'rgba(233, 233, 237, 0.03)',
-        border: '1px solid rgba(233, 233, 237, 0.06)',
-        fontSize: '11px',
-        color: 'var(--color-neutral-400)'
-      }}>
-        <Info size={14} color="var(--color-accent)" style={{ flex: 'none' }} />
-        <span>
-          <strong>Subject ceiling:</strong> Individual courses sum to {subjectLeftSum} safe bunks left (see Subjects tab).
-        </span>
-      </div>
     </div>
   );
 };

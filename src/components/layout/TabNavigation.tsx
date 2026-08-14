@@ -17,15 +17,19 @@ export const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabCh
 
   return (
     <nav style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
       display: 'flex',
-      gap: '4px',
-      flexWrap: 'wrap',
-      padding: '4px',
-      borderRadius: '12px',
-      background: 'rgba(233, 233, 237, 0.04)',
-      alignSelf: 'flex-start',
-      maxWidth: '100%',
-      border: '1px solid rgba(233, 233, 237, 0.06)'
+      justifyContent: 'space-around',
+      alignItems: 'center',
+      padding: '10px env(safe-area-inset-right) max(10px, env(safe-area-inset-bottom)) env(safe-area-inset-left)',
+      background: 'rgba(22, 24, 38, 0.85)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      borderTop: '1px solid rgba(233, 233, 237, 0.06)',
+      zIndex: 50
     }}>
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
@@ -35,21 +39,34 @@ export const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabCh
             onClick={() => onTabChange(tab.id)}
             style={{
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
-              gap: '7px',
-              padding: '8px 14px',
-              borderRadius: '9px',
+              justifyContent: 'center',
+              gap: '4px',
+              padding: '6px',
               cursor: 'pointer',
               fontFamily: 'var(--font-heading)',
-              fontSize: '13px',
+              fontSize: '11px',
               fontWeight: 500,
-              border: '1px solid ' + (isActive ? 'var(--color-accent-700)' : 'transparent'),
-              background: isActive ? 'color-mix(in srgb, var(--color-accent) 16%, transparent)' : 'transparent',
-              color: isActive ? 'var(--color-accent-200)' : 'var(--color-neutral-400)',
-              transition: 'all 0.15s ease'
+              border: 'none',
+              background: 'transparent',
+              color: isActive ? 'var(--color-accent-300)' : 'var(--color-neutral-500)',
+              transition: 'all 0.15s ease',
+              flex: 1
             }}
           >
-            {tab.icon}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '32px',
+              height: '32px',
+              borderRadius: '16px',
+              background: isActive ? 'color-mix(in srgb, var(--color-accent) 16%, transparent)' : 'transparent',
+              transition: 'all 0.15s ease'
+            }}>
+              {tab.icon}
+            </div>
             {tab.label}
           </button>
         );

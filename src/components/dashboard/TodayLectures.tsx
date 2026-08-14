@@ -42,7 +42,7 @@ export const TodayLectures: React.FC<TodayLecturesProps> = ({
       dayNote = 'Weekend';
     }
   } else {
-    dayNote = 'Historical baseline period';
+    dayNote = '';
   }
 
   const emptyLabel = kind === 'weekend'
@@ -184,8 +184,7 @@ export const TodayLectures: React.FC<TodayLecturesProps> = ({
                       ...pStyle
                     }}
                   >
-                    <Check weight="bold" size={14} />
-                    <span>Attended</span>
+                    <Check weight="bold" size={16} />
                   </button>
 
                   <button
@@ -206,8 +205,7 @@ export const TodayLectures: React.FC<TodayLecturesProps> = ({
                       ...aStyle
                     }}
                   >
-                    <X weight="bold" size={14} />
-                    <span>Missed</span>
+                    <X weight="bold" size={16} />
                   </button>
 
                   <button
@@ -228,8 +226,7 @@ export const TodayLectures: React.FC<TodayLecturesProps> = ({
                       ...cStyle
                     }}
                   >
-                    <Prohibit weight="bold" size={14} />
-                    <span>Off</span>
+                    <Prohibit weight="bold" size={16} />
                   </button>
                 </div>
               </div>

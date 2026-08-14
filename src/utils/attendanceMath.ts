@@ -301,16 +301,15 @@ export function getLiveLectureStatus(nowIST: Date): LiveLectureStatus {
       if (offset > 0 || sMin > currentMinutes) {
         const diffMinutes = offset * 1440 + sMin - currentMinutes;
 
-        // If today is weekend (Sat/Sun) or Friday after classes (> 18h to next class)
         if (isWeekend || diffMinutes > 1440) {
           const targetDayName = checkDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
           return {
-            kicker: `🌴 Weekend · Next class ${targetDayName}`,
+            kicker: `🌴 Next Class`,
             dot: 'var(--color-accent-400)',
             subject: lec.s,
-            timeRange: `${checkDate.toLocaleDateString('en-GB', { weekday: 'long' })} · ${formatTimeRange(lec.t, lec.e)}`,
+            timeRange: `${targetDayName} • ${formatTimeRange(lec.t, lec.e)}`,
             progress: '0%',
-            meta: `Weekend Safe Zone · Classes resume ${checkDate.toLocaleDateString('en-GB', { weekday: 'long' })} at ${lec.t}`,
+            meta: '',
             isLive: false,
             isWeekend: true
           };
@@ -320,21 +319,15 @@ export function getLiveLectureStatus(nowIST: Date): LiveLectureStatus {
           ? 'Today'
           : offset === 1
           ? 'Tomorrow'
-          : checkDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
-
-        const h = Math.floor(diffMinutes / 60);
-        const mm = diffMinutes % 60;
-        const meta = h > 0
-          ? `starts in ${h} h ${mm} m`
-          : `starts in ${mm} min`;
+          : checkDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 
         return {
-          kicker: `Up next · ${when}`,
+          kicker: `Up next`,
           dot: 'var(--color-accent-400)',
           subject: lec.s,
-          timeRange: formatTimeRange(lec.t, lec.e),
+          timeRange: `${when} • ${formatTimeRange(lec.t, lec.e)}`,
           progress: '0%',
-          meta,
+          meta: '',
           isLive: false,
           isWeekend: false
         };

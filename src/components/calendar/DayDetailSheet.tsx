@@ -65,7 +65,7 @@ export const DayDetailSheet: React.FC<DayDetailSheetProps> = ({
     : kind === 'weekend'
     ? 'Weekend Safe Zone.'
     : !isEditable
-    ? 'Pre-loaded Historical Baseline (27 attended of 33 held across July 20 – Aug 14). Daily in-app marks activate from 17 Aug.'
+    ? 'Historical baseline period (cannot edit).'
     : 'No classes scheduled on this day.';
 
   const getButtonStyle = (isActive: boolean, activeColor: string) => {
