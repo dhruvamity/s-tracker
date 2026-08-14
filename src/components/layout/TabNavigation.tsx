@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarDots, Books, ChartBar } from '@phosphor-icons/react';
+import { CalendarDots, ChartBar } from '@phosphor-icons/react';
 import { TabId } from '../../types/attendance';
 
 interface TabNavigationProps {
@@ -10,7 +10,6 @@ interface TabNavigationProps {
 export const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange }) => {
   const tabs: { id: TabId; label: string; icon: React.ReactNode }[] = [
     { id: 'calendar', label: 'Calendar', icon: <CalendarDots size={16} /> },
-    { id: 'subjects', label: 'Subjects', icon: <Books size={16} /> },
     { id: 'trend', label: 'Trend', icon: <ChartBar size={16} /> }
   ];
 

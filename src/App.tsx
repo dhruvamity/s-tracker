@@ -9,7 +9,6 @@ import { BunkBudgetRing } from './components/dashboard/BunkBudgetRing';
 import { QuickStatsCard } from './components/dashboard/QuickStatsCard';
 import { TodayLectures } from './components/dashboard/TodayLectures';
 import { CalendarView } from './components/calendar/CalendarView';
-import { SubjectExposure } from './components/subjects/SubjectExposure';
 import { WeeklyTrendChart } from './components/trend/WeeklyTrendChart';
 
 export const App: React.FC = () => {
@@ -21,11 +20,9 @@ export const App: React.FC = () => {
     targetPercent,
     reserveDays,
     stats,
-    subjects,
     trends,
     toggleMark,
-    setDayMarks,
-    firebase
+    setDayMarks
   } = useAttendance(nowIST);
 
   return (
@@ -42,7 +39,6 @@ export const App: React.FC = () => {
           greeting={greeting}
           istClock={istClockFormatted}
           istDate={istDateFormatted}
-          syncStatus={firebase.status}
         />
 
         {/* Overview Metric Cards */}
@@ -86,13 +82,6 @@ export const App: React.FC = () => {
             nowIST={nowIST}
             onToggleMark={toggleMark}
             onSetDayMarks={setDayMarks}
-          />
-        )}
-
-        {activeTab === 'subjects' && (
-          <SubjectExposure
-            subjects={subjects}
-            targetPercent={targetPercent}
           />
         )}
 

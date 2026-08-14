@@ -21,15 +21,17 @@ export const LiveStatusCard: React.FC<LiveStatusCardProps> = ({ live }) => {
       border: '1px solid rgba(233, 233, 237, 0.07)'
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span
-          className={live.isLive ? 'animate-pulse-dot' : ''}
-          style={{
-            width: '7px',
-            height: '7px',
-            borderRadius: '50%',
-            background: live.dot
-          }}
-        />
+        {!live.isWeekend && !live.kicker.startsWith('🌴') && (
+          <span
+            className={live.isLive ? 'animate-pulse-dot' : ''}
+            style={{
+              width: '7px',
+              height: '7px',
+              borderRadius: '50%',
+              background: live.dot
+            }}
+          />
+        )}
         <span style={{
           fontSize: '10px',
           letterSpacing: '.14em',
