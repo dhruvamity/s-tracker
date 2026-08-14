@@ -19,15 +19,13 @@ export type MarksMap = Record<string, Record<number, MarkStatus>>;
 export interface AttendanceStats {
   R: number; // Remaining lectures scheduled (excluding cancelled)
   H: number; // Total semester held once complete (BASE_HELD + R)
-  allowed: number; // Maximum bunks allowed to stay at or above target % (global pool)
-  subjectSafeSum: number; // Sum of individual subject safe allowances (e.g. 15)
-  subjectLeftSum: number; // Sum of remaining individual subject safe bunks
+  allowed: number; // Overall maximum bunks allowed to stay at or above target % (combined pool)
   cancelled: number; // Cancelled lectures marked
   absent: number; // Lectures bunked from TRACK_FROM onwards
   present: number; // Lectures attended from TRACK_FROM onwards
   pastUnmarked: number; // Unmarked lectures in the past (up to today)
-  left: number; // Bunk budget remaining (allowed - absent)
-  currentPct: number; // Attendance % held so far
+  left: number; // Overall bunk budget remaining (allowed - absent)
+  currentPct: number; // Overall attendance % held so far
   heldNow: number; // Total held so far (BASE_HELD + pastP + pastA)
   attNow: number; // Total attended so far (BASE_ATT + pastP)
   projected: number; // Projected final % if all remaining lectures are attended
@@ -47,10 +45,12 @@ export interface LiveLectureStatus {
 export interface SubjectStat {
   name: string;
   days: string;
-  left: number;
   total: number;
+  attended: number;
   absent: number;
-  safeAllowance: number;
+  cancelled: number;
+  pct: number;
+  pctLabel: string;
   color: string;
   shadow: string;
   barPct: string;

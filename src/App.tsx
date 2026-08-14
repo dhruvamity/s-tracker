@@ -93,9 +93,6 @@ export const App: React.FC = () => {
           <SubjectExposure
             subjects={subjects}
             targetPercent={targetPercent}
-            overallLeft={stats.left}
-            subjectSafeSum={stats.subjectSafeSum}
-            subjectLeftSum={stats.subjectLeftSum}
           />
         )}
 

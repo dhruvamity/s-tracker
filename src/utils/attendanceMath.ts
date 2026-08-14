@@ -49,15 +49,20 @@ export function calculateSubjectExposure(
   targetPercent: number
 ): SubjectStat[] {
   const schedule = generateSemesterSchedule();
-  const summary: Record<string, { total: number; absent: number; days: Record<string, boolean> }> = {};
+  const summary: Record<string, { total: number; attended: number; absent: number; cancelled: number; days: Record<string, boolean> }> = {};
 
   schedule.forEach((lec) => {
     const m = getMark(marks, lec.k, lec.i);
     if (!summary[lec.s]) {
-      summary[lec.s] = { total: 0, absent: 0, days: {} };
+      summary[lec.s] = { total: 0, attended: 0, absent: 0, cancelled: 0, days: {} };
     }
-    if (m !== 'c') summary[lec.s].total++;
-    if (m === 'a') summary[lec.s].absent++;
+    if (m === 'c') {
+      summary[lec.s].cancelled++;
+    } else {
+      summary[lec.s].total++;
+      if (m === 'p') summary[lec.s].attended++;
+      else if (m === 'a') summary[lec.s].absent++;
+    }
 
     const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][parseDateKey(lec.k).getDay()];
     summary[lec.s].days[dayName] = true;
@@ -67,27 +72,27 @@ export function calculateSubjectExposure(
     .sort((a, b) => summary[b].total - summary[a].total)
     .map((name) => {
       const s = summary[name];
-      const safeAllowance = Math.max(0, Math.floor(s.total * (1 - targetPercent / 100)));
-      const left = Math.max(0, safeAllowance - s.absent);
+      const held = s.attended + s.absent;
+      const pct = held > 0 ? (s.attended / held) * 100 : 100;
+      const pctLabel = held > 0 ? `${Math.round(pct)}%` : '100%';
 
       let color = THEME_COLORS.GREEN_BRIGHT;
-      if (left === 0) color = THEME_COLORS.RED;
-      else if (left <= 1) color = THEME_COLORS.AMBER;
+      if (held > 0 && pct < targetPercent - 10) color = THEME_COLORS.RED;
+      else if (held > 0 && pct < targetPercent) color = THEME_COLORS.AMBER;
 
-      const shadow = left === 0
-        ? `0 0 0 1px color-mix(in srgb, ${THEME_COLORS.RED} 45%, transparent)`
-        : 'var(--shadow-sm)';
-
-      const barPct = `${Math.round((safeAllowance ? left / safeAllowance : 0) * 100)}%`;
-      const note = `${s.total} remaining · ${s.absent} missed · Max ${safeAllowance} skippable`;
+      const shadow = 'var(--shadow-sm)';
+      const barPct = `${Math.min(100, Math.round(pct))}%`;
+      const note = `${s.attended} attended · ${s.absent} missed · ${s.total - held} upcoming`;
 
       return {
         name,
         days: Object.keys(s.days).join(' · '),
-        left,
         total: s.total,
+        attended: s.attended,
         absent: s.absent,
-        safeAllowance,
+        cancelled: s.cancelled,
+        pct,
+        pctLabel,
         color,
         shadow,
         barPct,
@@ -135,16 +140,10 @@ export function calculateAttendanceStats(
   const projected = H > 0 ? ((BASE_ATT + R - absent) / H) * 100 : 0;
   const left = allowed - absent;
 
-  const subjects = calculateSubjectExposure(marks, targetPercent);
-  const subjectSafeSum = subjects.reduce((sum, s) => sum + s.safeAllowance, 0);
-  const subjectLeftSum = subjects.reduce((sum, s) => sum + s.left, 0);
-
   return {
     R,
     H,
     allowed,
-    subjectSafeSum,
-    subjectLeftSum,
     cancelled,
     absent,
     present,
