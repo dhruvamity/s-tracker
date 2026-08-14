@@ -53,3 +53,113 @@
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
+
+/* Responsive App Layout */
+.app-wrapper {
+  min-height: 100vh;
+  background: radial-gradient(120% 80% at 88% -10%, #22203c 0%, #161826 55%);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  padding: 14px 12px calc(84px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .app-wrapper {
+    padding: clamp(20px, 3vw, 36px) clamp(16px, 3vw, 36px) 64px;
+  }
+}
+
+/* Responsive Navigation */
+.responsive-tab-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 8px env(safe-area-inset-right) max(8px, env(safe-area-inset-bottom)) env(safe-area-inset-left);
+  background: rgba(22, 24, 38, 0.90);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(233, 233, 237, 0.08);
+  z-index: 50;
+  box-sizing: border-box;
+}
+
+.tab-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 6px;
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  color: var(--color-neutral-500);
+  transition: all 0.15s ease;
+  flex: 1;
+}
+
+.tab-nav-btn.active {
+  color: var(--color-accent-200);
+}
+
+.tab-nav-btn-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 15px;
+  background: transparent;
+  transition: all 0.15s ease;
+}
+
+.tab-nav-btn.active .tab-nav-btn-icon-wrapper {
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+}
+
+@media (min-width: 768px) {
+  .responsive-tab-nav {
+    position: static;
+    display: inline-flex;
+    align-self: flex-start;
+    padding: 5px;
+    gap: 6px;
+    border-radius: 12px;
+    background: rgba(233, 233, 237, 0.04);
+    border: 1px solid rgba(233, 233, 237, 0.07);
+    border-top: 1px solid rgba(233, 233, 237, 0.07);
+    width: fit-content;
+    z-index: auto;
+  }
+
+  .tab-nav-btn {
+    flex-direction: row;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 9px;
+    font-size: 13px;
+    flex: none;
+    border: 1px solid transparent;
+  }
+
+  .tab-nav-btn.active {
+    background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+    border: 1px solid var(--color-accent-700);
+  }
+
+  .tab-nav-btn-icon-wrapper {
+    width: auto;
+    height: auto;
+    border-radius: 0;
+    background: transparent !important;
+  }
+}
+

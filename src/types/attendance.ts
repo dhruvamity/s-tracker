@@ -69,6 +69,6 @@ export interface WeekTrend {
   isBaseline?: boolean;
 }
 
-export type TabId = 'calendar' | 'subjects' | 'trend' | 'setup';
+export type TabId = 'calendar' | 'subjects' | 'trend';
 
 export type FirebaseSyncState = 'idle' | 'connecting' | 'live' | 'error';
