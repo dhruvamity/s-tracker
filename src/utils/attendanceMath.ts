@@ -199,12 +199,12 @@ export function calculateWeeklyTrends(
     {
       weekKey: '2026-08-10',
       label: '10 Aug',
-      pct: 80.0,
-      pctLabel: '80%',
-      heightPx: Math.max(6, Math.round(80.0 * 1.3)),
+      pct: 90.0,
+      pctLabel: '90%',
+      heightPx: Math.max(6, Math.round(90.0 * 1.3)),
       color: THEME_COLORS.GREEN_BRIGHT,
       totalHeld: 10,
-      attended: 8,
+      attended: 9,
       isBaseline: true
     }
   ];

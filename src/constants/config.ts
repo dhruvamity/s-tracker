@@ -1,5 +1,5 @@
 export const BASE_HELD = 32;
-export const BASE_ATT = 26;
+export const BASE_ATT = 27;
 
 export const DEFAULT_TARGET_PERCENT = 75;
 export const DEFAULT_RESERVE_DAYS = 5;

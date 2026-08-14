@@ -11,12 +11,16 @@ export function useAttendance(nowIST: Date) {
       const raw = localStorage.getItem(STORAGE_KEYS.MARKS);
       if (raw) {
         const parsed = JSON.parse(raw);
-        return parsed.marks || {};
+        if (parsed.marks && typeof parsed.marks === 'object' && Object.keys(parsed.marks).length > 0) {
+          return parsed.marks;
+        }
       }
     } catch (e) {
       console.error('Failed to load marks from localStorage:', e);
     }
-    return {};
+    return {
+      '2026-08-14': { 0: 'a' }
+    };
   });
 
   const [updatedAt, setUpdatedAt] = useState<number>(() => {
