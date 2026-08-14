@@ -9,9 +9,9 @@ export function useAttendance(nowIST: Date) {
   const [marks, setMarks] = useState<MarksMap>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEYS.MARKS);
-      if (raw) {
+      if (raw !== null) {
         const parsed = JSON.parse(raw);
-        if (parsed.marks && typeof parsed.marks === 'object' && Object.keys(parsed.marks).length > 0) {
+        if (parsed && typeof parsed.marks === 'object') {
           return parsed.marks;
         }
       }

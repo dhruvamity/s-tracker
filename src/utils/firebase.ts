@@ -109,8 +109,7 @@ class FirebaseService implements FirebaseSyncService {
     try {
       await this.fsModule.setDoc(
         this.docRef,
-        { marks, updatedAt },
-        { merge: true }
+        { marks, updatedAt }
       );
     } catch (err) {
       console.warn('Firebase push failed:', err);
