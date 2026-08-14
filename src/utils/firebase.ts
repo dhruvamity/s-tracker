@@ -1,3 +1,6 @@
+import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { getAuth, signInAnonymously, Auth } from 'firebase/auth';
+import { getFirestore, doc, setDoc, onSnapshot, Firestore, DocumentReference, Unsubscribe } from 'firebase/firestore';
 import { MarksMap } from '../types/attendance';
 
 export interface FirebaseSyncService {
@@ -11,9 +14,10 @@ export interface FirebaseSyncService {
 }
 
 class FirebaseService implements FirebaseSyncService {
-  private docRef: any = null;
-  private fsModule: any = null;
-  private unsubscribe: (() => void) | null = null;
+  private db: Firestore | null = null;
+  private docRef: DocumentReference | null = null;
+  private unsubscribe: Unsubscribe | null = null;
+  private app: FirebaseApp | null = null;
 
   async connect(
     rawConfig: string,
@@ -22,13 +26,12 @@ class FirebaseService implements FirebaseSyncService {
   ): Promise<boolean> {
     const src = String(rawConfig || '').trim();
     if (!src) {
-      onStatusChange('error', 'Paste your Firebase web config first.');
+      onStatusChange('error', 'Firebase config missing.');
       return false;
     }
 
     let configObj: Record<string, any>;
     try {
-      // Clean and parse JS object or JSON format
       const cleaned = src
         .replace(/^[^{]*/, '')
         .replace(/([,{]\s*)([A-Za-z0-9_]+)\s*:/g, '$1"$2":')
@@ -36,55 +39,44 @@ class FirebaseService implements FirebaseSyncService {
         .replace(/,\s*}/g, '}');
       configObj = JSON.parse(cleaned);
     } catch {
-      onStatusChange('error', 'That config is not valid JSON.');
+      onStatusChange('error', 'Invalid Firebase config format.');
       return false;
     }
 
-    onStatusChange('connecting', 'Connecting to Firestore…');
+    onStatusChange('connecting', 'Connecting to cloud database…');
 
     try {
-      const base = 'https://www.gstatic.com/firebasejs/10.12.5/';
-      const [appModule, authModule, firestoreModule] = await Promise.all([
-        import(/* @vite-ignore */ `${base}firebase-app.js`),
-        import(/* @vite-ignore */ `${base}firebase-auth.js`),
-        import(/* @vite-ignore */ `${base}firebase-firestore.js`)
-      ]);
+      this.app = getApps().length > 0 ? getApps()[0] : initializeApp(configObj);
+      this.db = getFirestore(this.app);
 
-      const app = appModule.getApps && appModule.getApps().length
-        ? appModule.getApps()[0]
-        : appModule.initializeApp(configObj);
-
-      const db = firestoreModule.getFirestore(app);
-
-      // Attempt anonymous auth if available, but don't fail if anonymous auth is not required by rules
+      // Attempt anonymous auth if available
       try {
-        const auth = authModule.getAuth(app);
-        await authModule.signInAnonymously(auth);
+        const auth: Auth = getAuth(this.app);
+        await signInAnonymously(auth);
       } catch (authErr) {
-        console.warn('Anonymous auth note (proceeding to Firestore):', authErr);
+        console.warn('Anonymous auth note (proceeding directly to Firestore):', authErr);
       }
 
-      this.fsModule = firestoreModule;
-      // All devices for Saanvi connect to the same shared attendance document
-      this.docRef = firestoreModule.doc(db, 'attendance', 'saanvi_sem5');
+      // Shared document path for Saanvi's attendance across all devices
+      this.docRef = doc(this.db, 'attendance', 'saanvi_sem5');
 
       if (this.unsubscribe) {
         this.unsubscribe();
       }
 
-      this.unsubscribe = firestoreModule.onSnapshot(
+      this.unsubscribe = onSnapshot(
         this.docRef,
-        (snap: any) => {
-          if (!snap.exists || snap.exists()) {
+        (snap) => {
+          if (snap.exists()) {
             const data = snap.data();
             if (data && typeof data.updatedAt === 'number') {
               onRemoteUpdate(data.marks || {}, data.updatedAt);
             }
           }
         },
-        (error: any) => {
-          onStatusChange('error', 'Firestore sync permission issue. Verify security rules in Firebase Console.');
+        (error) => {
           console.error('Firestore listener error:', error);
+          onStatusChange('error', 'Firestore permission denied. Check security rules in Firebase Console.');
         }
       );
 
@@ -96,21 +88,22 @@ class FirebaseService implements FirebaseSyncService {
       let userFriendlyMsg = msg;
 
       if (code === 'permission-denied' || msg.includes('permission-denied')) {
-        userFriendlyMsg = 'Firestore permission denied: Update Firestore Security Rules to allow read/write on attendance collection.';
+        userFriendlyMsg = 'Firestore permission denied: allow read, write on attendance collection in Firebase Console.';
       }
 
+      console.error('Firebase connection error:', err);
       onStatusChange('error', userFriendlyMsg);
       return false;
     }
   }
 
   async push(marks: MarksMap, updatedAt: number): Promise<void> {
-    if (!this.docRef || !this.fsModule) return;
+    if (!this.docRef) {
+      console.warn('Cannot push to Firestore: not connected');
+      return;
+    }
     try {
-      await this.fsModule.setDoc(
-        this.docRef,
-        { marks, updatedAt }
-      );
+      await setDoc(this.docRef, { marks, updatedAt });
     } catch (err) {
       console.warn('Firebase push failed:', err);
     }
@@ -122,8 +115,10 @@ class FirebaseService implements FirebaseSyncService {
       this.unsubscribe = null;
     }
     this.docRef = null;
-    this.fsModule = null;
+    this.db = null;
+    this.app = null;
   }
 }
 
 export const firebaseService = new FirebaseService();
+
