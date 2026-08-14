@@ -1,6 +1,6 @@
 export const TERM_START = '2026-07-20';
 export const TERM_END = '2026-12-01';
-export const TRACK_FROM = '2026-08-17';
+export const TRACK_FROM = '2026-08-14';
 
 // Exam & vacation windows
 export const MIDTERM_WINDOW: [string, string] = ['2026-08-31', '2026-09-10'];
